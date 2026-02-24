@@ -58,8 +58,32 @@ export default function Hero() {
         background: 'var(--bg)',
       }}
     >
+      {/* ── Grid layers ─────────────────────────────────────────── */}
       <div className="absolute inset-0 hero-lattice" aria-hidden="true" />
       <Lattice />
+
+      {/*
+        OPTION 3 — Grid-only radial fade behind the logo area.
+        Sits above the grid layers (z-index 2) but below all content (z-10).
+        Uses rgba black so it only mutes the grid dots/lines underneath —
+        it does NOT add a visible dark plate; it simply quiets visual noise.
+        NOT applied to the whole hero — only the logo region.
+      */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '40%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '860px',
+          height: '760px',
+          background:
+            'radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 70%)',
+          pointerEvents: 'none',
+          zIndex: 2,
+        }}
+      />
 
       {/* Wide ambient section glow — static */}
       <div
@@ -74,25 +98,25 @@ export default function Hero() {
           background:
             'radial-gradient(ellipse, rgba(var(--accent2-rgb),0.09) 0%, rgba(var(--accent-rgb),0.04) 55%, transparent 72%)',
           pointerEvents: 'none',
+          zIndex: 3,
         }}
       />
 
       {/* ── Content ─────────────────────────────────────────────── */}
       {/*
-        pb-24 reserves space at the bottom of the content block so the
-        CTA buttons never overlap the absolutely-positioned scroll indicator.
+        pb-24 reserves space at the bottom so CTA buttons never
+        overlap the absolutely-positioned scroll indicator.
       */}
       <div
         className="relative z-10 flex flex-col items-center text-center px-6 pb-24"
         style={{ maxWidth: '800px' }}
       >
         {/*
-          Logo wrapper — stacking context for the two halo layers.
+          Logo wrapper — contains the brand glow only (no dark scrim).
 
-          Layer B (outermost) — brand glow: accent colors, blur 64px.
-          Layer A (inner)     — contrast scrim: dark radial, blur 28px,
-                                lifts the "MAG" letters off the background.
-          img                 — sits on top with drop-shadow for edge clarity.
+          Layer B (outermost) — brand glow: accent colors, blur 64px, slow pulse.
+          img                 — sits on top; all contrast work is done via CSS
+                                filter directly on the element (Options 1 + 2).
         */}
         <div
           className="animate-fade-in anim-delay-1"
@@ -103,7 +127,7 @@ export default function Hero() {
             zIndex: 1,
           }}
         >
-          {/* Layer B — brand glow (furthest back) */}
+          {/* Layer B — brand glow */}
           <div
             aria-hidden="true"
             style={{
@@ -121,39 +145,34 @@ export default function Hero() {
             }}
           />
 
-          {/* Layer A — contrast scrim (larger + darker than default for MAG legibility) */}
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              top: '-60px',
-              left: '-60px',
-              right: '-60px',
-              bottom: '-60px',
-              background:
-                'radial-gradient(closest-side, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 72%)',
-              filter: 'blur(28px)',
-              pointerEvents: 'none',
-              zIndex: 1,
-            }}
-          />
-
           {/*
-            Logo — ~2× larger on mobile (w-72 = 288px vs original ~160px clamp min).
-            max-w-[85vw] prevents overflow on narrow viewports (e.g. iPhone SE).
-            sm:max-w-none removes the cap once there's enough room.
+            Logo — +30% larger across all breakpoints vs previous sizing.
+            max-w-[85vw] prevents overflow on narrow viewports (iPhone SE).
+            sm:max-w-none removes the cap once there's enough horizontal room.
+
+            filter breakdown (applied left-to-right):
+              brightness(1.18) contrast(1.05)
+                → OPTION 2: dark-mode optimisation — ~15-18% luminance lift on
+                  all rendered logo colors. The logo SVG embeds a rasterized PNG
+                  (~530KB); there are no editable path nodes, so CSS filter is the
+                  correct implementation of the "dark variant" requirement.
+              drop-shadow(0 14px 34px rgba(0,0,0,0.60))
+                → OPTION 1a: deep shadow for depth separation.
+              drop-shadow(0 0 6px rgba(255,255,255,0.05))
+                → OPTION 1b: extremely subtle light edge-lift. Not a visible
+                  outline — just barely enough to separate letter edges.
           */}
           <img
             src="/logo.svg"
             alt="Magzenix Innovations"
-            className="w-72 max-w-[85vw] sm:max-w-none sm:w-80 lg:w-96"
+            className="w-[374px] max-w-[85vw] sm:max-w-none sm:w-[416px] lg:w-[499px]"
             style={{
               position: 'relative',
               zIndex: 2,
               height: 'auto',
               display: 'block',
               filter:
-                'drop-shadow(0 10px 26px rgba(0,0,0,0.50)) drop-shadow(0 1px 0 rgba(255,255,255,0.04))',
+                'brightness(1.18) contrast(1.05) drop-shadow(0 14px 34px rgba(0,0,0,0.60)) drop-shadow(0 0 6px rgba(255,255,255,0.05))',
             }}
           />
         </div>
@@ -239,11 +258,7 @@ export default function Hero() {
         </div>
       </div>
 
-      {/*
-        Scroll hint — always visible, safe-area-aware.
-        -translate-x-1/2 replaces the old inline transform.
-        bottom uses max() so it sits above the iOS home indicator on notched devices.
-      */}
+      {/* Scroll hint — safe-area-aware, never covered by buttons */}
       <div
         className="absolute left-1/2 -translate-x-1/2 animate-fade-in anim-delay-6"
         style={{
@@ -252,6 +267,7 @@ export default function Hero() {
           flexDirection: 'column',
           alignItems: 'center',
           gap: '6px',
+          zIndex: 10,
         }}
         aria-hidden="true"
       >
